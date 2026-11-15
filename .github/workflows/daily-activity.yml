@@ -1,0 +1,39 @@
+
+name: Daily GitHub Activity
+
+on:
+  schedule:
+    - cron: "7 20 * * *"
+      timezone: "Africa/Nairobi"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  daily-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Update daily activity log
+        run: |
+          mkdir -p activity
+          TODAY=$(TZ=Africa/Nairobi date +%Y-%m-%d)
+          echo "$TODAY - Daily repository maintenance." >> activity/activity-log.md
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "Gideon Bett"
+          git config user.email "${{ secrets.GIT_AUTHOR_EMAIL }}"
+
+          git add activity/activity-log.md
+
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: daily repository update"
+            git push
+          else
+            echo "No changes to commit."
+          fi
